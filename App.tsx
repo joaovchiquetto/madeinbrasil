@@ -42,6 +42,11 @@ const App: React.FC = () => {
     }
   };
 
+  const handleRemoveGuest = (idToRemove: string) => {
+    // Atualiza a lista removendo aquele ID específico
+    setGuests((prevGuests) => prevGuests.filter((guest) => guest.id !== idToRemove));
+  };
+
   const handleWallpaperChange = (imageUrl: string) => {
     setWallpaper(imageUrl);
     localStorage.setItem('made_in_brasil_wallpaper', imageUrl);
@@ -76,7 +81,10 @@ const App: React.FC = () => {
         </div>
 
         <section id="guest-list-section" className="mt-16 sm:mt-24">
-          <GuestList guests={guests} />
+          <GuestList 
+          guests={guests} 
+          onRemoveGuest={handleRemoveGuest} 
+        />
         </section>
       </main>
 

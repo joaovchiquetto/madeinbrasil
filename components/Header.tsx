@@ -1,5 +1,5 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 
 interface HeaderProps {
   wallpaper: string | null;
@@ -9,6 +9,14 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ wallpaper, onWallpaperChange, onRemoveWallpaper }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Verifica a URL para liberar as opções de edição
+  useEffect(() => {
+    if (window.location.href.includes('mode=admin')) {
+      setIsAdmin(true);
+    }
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -34,31 +42,33 @@ export const Header: React.FC<HeaderProps> = ({ wallpaper, onWallpaperChange, on
     >
       <div className="pattern-overlay absolute inset-0 opacity-15"></div>
       
-      {/* Botão de Customização Adaptativo */}
-      <div className="absolute top-3 right-3 sm:top-6 sm:right-6 z-30 flex gap-2">
-        <input 
-          type="file" 
-          ref={fileInputRef} 
-          onChange={handleFileChange} 
-          accept="image/*" 
-          className="hidden" 
-        />
-        <button 
-          onClick={() => fileInputRef.current?.click()}
-          className="bg-black/20 hover:bg-black/40 backdrop-blur-lg text-white p-2 sm:px-4 sm:py-2.5 rounded-full sm:rounded-xl text-[10px] sm:text-xs font-black flex items-center gap-2 border border-white/20 transition-all shadow-2xl active:scale-90"
-        >
-          <span className="text-sm sm:text-base">🖼️</span>
-          <span className="hidden md:inline uppercase tracking-widest">{wallpaper ? 'Trocar Fundo' : 'Personalizar'}</span>
-        </button>
-        {wallpaper && (
+{/* Botão de Customização Adaptativo - Só visível para Admin */}
+      {isAdmin && (
+        <div className="absolute top-3 right-3 sm:top-6 sm:right-6 z-30 flex gap-2">
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            onChange={handleFileChange} 
+            accept="image/*" 
+            className="hidden" 
+          />
           <button 
-            onClick={onRemoveWallpaper}
-            className="bg-red-500/30 hover:bg-red-500/50 backdrop-blur-lg text-white p-2 sm:px-4 sm:py-2.5 rounded-full sm:rounded-xl border border-white/20 transition-all shadow-2xl active:scale-90"
+            onClick={() => fileInputRef.current?.click()}
+            className="bg-black/20 hover:bg-black/40 backdrop-blur-lg text-white p-2 sm:px-4 sm:py-2.5 rounded-full sm:rounded-xl text-[10px] sm:text-xs font-black flex items-center gap-2 border border-white/20 transition-all shadow-2xl active:scale-90"
           >
-            <span className="text-sm sm:text-base">🗑️</span>
+            <span className="text-sm sm:text-base">🖼️</span>
+            <span className="hidden md:inline uppercase tracking-widest">{wallpaper ? 'Trocar Fundo' : 'Personalizar'}</span>
           </button>
-        )}
-      </div>
+          {wallpaper && (
+            <button 
+              onClick={onRemoveWallpaper}
+              className="bg-red-500/30 hover:bg-red-500/50 backdrop-blur-lg text-white p-2 sm:px-4 sm:py-2.5 rounded-full sm:rounded-xl border border-white/20 transition-all shadow-2xl active:scale-90"
+            >
+              <span className="text-sm sm:text-base">🗑️</span>
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="relative z-10 text-center max-w-4xl mx-auto">
         <div className="inline-flex items-center gap-2 bg-white/95 text-green-800 font-black px-4 py-1.5 rounded-full text-[10px] sm:text-xs uppercase tracking-[0.2em] mb-6 shadow-xl animate-bounce">

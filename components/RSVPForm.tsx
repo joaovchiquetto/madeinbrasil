@@ -1,6 +1,6 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Guest } from '../types';
+import { GiftList } from './GiftList';
 
 interface RSVPFormProps {
   onConfirm: (guest: Guest) => void;
@@ -11,6 +11,18 @@ export const RSVPForm: React.FC<RSVPFormProps> = ({ onConfirm }) => {
   const [numPeople, setNumPeople] = useState(1);
   const [extraNames, setExtraNames] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showGiftList, setShowGiftList] = useState(false);
+  
+  // NOVO: Estado para controlar se já foi confirmado
+  const [hasConfirmed, setHasConfirmed] = useState(false);
+
+  // NOVO: Verifica se já confirmou assim que a página carrega
+  useEffect(() => {
+    const jaConfirmou = localStorage.getItem('presenca_confirmada_mib');
+    if (jaConfirmou) {
+      setHasConfirmed(true);
+    }
+  }, []);
 
   const handleNumChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = parseInt(e.target.value);
@@ -27,10 +39,12 @@ export const RSVPForm: React.FC<RSVPFormProps> = ({ onConfirm }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!name.trim()) return;
 
     setIsSubmitting(true);
     
+    // Simula tempo de rede
     setTimeout(() => {
       const newGuest: Guest = {
         id: crypto.randomUUID(),
@@ -42,15 +56,49 @@ export const RSVPForm: React.FC<RSVPFormProps> = ({ onConfirm }) => {
       
       onConfirm(newGuest);
       
-      setName('');
-      setNumPeople(1);
-      setExtraNames([]);
-      setIsSubmitting(false);
+      // Salva o "carimbo" no navegador
+      localStorage.setItem('presenca_confirmada_mib', 'true');
       
-      alert('Sua presença foi confirmada com sucesso! 🇧🇷');
+      // Atualiza o estado para mudar a tela imediatamente
+      setHasConfirmed(true); 
+      setIsSubmitting(false);
     }, 800);
   };
 
+  // NOVO: Controle de visualização após confirmação
+  if (hasConfirmed) {
+    // Se o usuário clicou para ver a lista, mostra o componente GiftList
+    if (showGiftList) {
+      return <GiftList />; 
+    }
+
+    // Caso contrário, mostra a mensagem de sucesso com o botão
+    return (
+      <div className="bg-green-50 p-10 rounded-[2.5rem] shadow-2xl border border-green-100 h-full flex flex-col items-center justify-center text-center animate-in fade-in duration-700">
+        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center text-4xl mb-6 shadow-sm">
+          ✅
+        </div>
+        <h2 className="text-3xl font-black text-green-800 mb-4">Presença Confirmada!</h2>
+        <p className="text-green-700 font-medium text-lg max-w-xs mx-auto mb-8">
+          Muito obrigado pela sua confirmação. <br/>Visite nossas sugestões de presentes.
+        </p>
+
+        {/* BOTÃO QUE ATIVA A LISTA */}
+        <button 
+          onClick={() => setShowGiftList(true)} 
+          className="bg-green-600 hover:bg-green-700 text-white font-black py-4 px-8 rounded-2xl shadow-lg transform transition-all active:scale-95 mb-8 tracking-wide uppercase text-sm"
+        >
+          🎁 Ver Lista de Presentes
+        </button>
+
+        <div className="text-sm font-bold text-green-600 uppercase tracking-widest">
+          Nos vemos em breve! 🇧🇷
+        </div>
+      </div>
+    );
+  }
+
+  // Se não confirmou, mostra o formulário normal
   return (
     <div className="bg-white p-6 sm:p-10 rounded-[2.5rem] shadow-2xl border border-gray-100 h-full">
       <div className="flex items-center gap-4 mb-8">

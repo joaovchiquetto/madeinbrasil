@@ -13,7 +13,7 @@ export const Footer: React.FC = () => {
           <div className="p-8 bg-white rounded-[2rem] shadow-xl border border-gray-50 flex flex-col items-center group hover:bg-green-50 transition-colors">
             <div className="w-16 h-16 bg-green-50 group-hover:bg-white rounded-2xl flex items-center justify-center text-3xl mb-4 shadow-inner transition-colors">👕</div>
             <h4 className="font-black text-gray-800 mb-2 uppercase tracking-widest text-sm">Dress Code</h4>
-            <p className="text-xs text-gray-500 font-bold leading-relaxed">Vá confortável e com cores vibrantes para dançar o dia todo!</p>
+            <p className="text-xs text-gray-500 font-bold leading-relaxed">Vá com traje confortável</p>
           </div>
           <div className="p-8 bg-white rounded-[2rem] shadow-xl border border-gray-50 flex flex-col items-center group hover:bg-yellow-50 transition-colors">
             <div className="w-16 h-16 bg-yellow-50 group-hover:bg-white rounded-2xl flex items-center justify-center text-3xl mb-4 shadow-inner transition-colors">🍻</div>

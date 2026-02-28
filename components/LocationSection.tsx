@@ -16,20 +16,20 @@ export const LocationSection: React.FC = () => {
         </div>
 
         <p className="mb-5 sm:mb-6 font-medium text-gray-600 text-sm leading-relaxed">
-          Nossa festa será na <span className="font-bold text-gray-800">Chácara De Bortole</span>. Confira o mapa interativo abaixo:
+          Nossa festa será no <span className="font-bold text-gray-800">Espaço Garcia</span>. Confira o mapa interativo abaixo:
         </p>
 
         {/* Mapa Interativo Incorporado */}
         <div className="w-full aspect-[16/10] sm:aspect-video rounded-3xl overflow-hidden border-2 border-blue-100 shadow-lg relative group">
           <iframe 
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3739.637172818648!2d-49.99649692497676!3d-20.40480278109045!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94bd58f43a67269b%3A0x459e2b3d8ba2d42f!2sChacar%C3%A1%20De%20Bortole!5e0!3m2!1spt-BR!2sbr!4v1705520000000!5m2!1spt-BR!2sbr" 
-            width="100%" 
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3739.28789586202!2d-49.95655748835636!3d-20.41223055342878!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94bd5991ea97bef1%3A0xa9d21af4ffc8650f!2sEspa%C3%A7o%20Garcia%20Eventos!5e0!3m2!1spt-BR!2sbr!4v1772296535317!5m2!1spt-BR!2sbr"
+            width="100%"
             height="100%" 
             style={{ border: 0 }} 
             allowFullScreen={true} 
             loading="lazy" 
             referrerPolicy="no-referrer-when-downgrade"
-            title="Mapa da Localização - Chácara De Bortole"
+            title="Mapa da Localização - Espaço Garcia"
             className="opacity-95 group-hover:opacity-100 transition-opacity"
           ></iframe>
           

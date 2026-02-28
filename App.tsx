@@ -1,4 +1,4 @@
-
+// App.tsx
 import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { Countdown } from './components/Countdown';
@@ -8,53 +8,111 @@ import { LocationSection } from './components/LocationSection';
 import { Footer } from './components/Footer';
 import { Guest } from './types';
 
+// NOVO: Adicionamos o setDoc para salvar as configurações
+import { collection, onSnapshot, addDoc, deleteDoc, doc, setDoc } from 'firebase/firestore';
+import { db } from './firebase';
+
 const App: React.FC = () => {
   const [guests, setGuests] = useState<Guest[]>([]);
   const [wallpaper, setWallpaper] = useState<string | null>(null);
 
   useEffect(() => {
-    const savedGuests = localStorage.getItem('made_in_brasil_guests');
-    if (savedGuests) {
-      setGuests(JSON.parse(savedGuests));
-    } else {
-      const sample: Guest[] = [
-        { id: '1', mainName: 'João da Silva', additionalGuests: ['Maria das Dores'], totalCount: 2, timestamp: new Date().toISOString() },
-        { id: '2', mainName: 'Zeca Pagodinho', additionalGuests: [], totalCount: 1, timestamp: new Date().toISOString() }
-      ];
-      setGuests(sample);
-      localStorage.setItem('made_in_brasil_guests', JSON.stringify(sample));
-    }
+    // Escuta os convidados em tempo real
+    const unsubscribeGuests = onSnapshot(collection(db, 'guests'), (snapshot) => {
+      const guestsData: Guest[] = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as Guest));
+      
+      guestsData.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      setGuests(guestsData);
+    });
 
-    const savedWallpaper = localStorage.getItem('made_in_brasil_wallpaper');
-    if (savedWallpaper) {
-      setWallpaper(savedWallpaper);
-    }
+    // NOVO: Escuta o papel de parede em tempo real do banco de dados!
+    // Ele olha para a coleção "configuracoes", no documento "aparencia"
+    const unsubscribeWallpaper = onSnapshot(doc(db, 'configuracoes', 'aparencia'), (docSnap) => {
+      if (docSnap.exists()) {
+        setWallpaper(docSnap.data().wallpaperUrl || null);
+      } else {
+        setWallpaper(null);
+      }
+    });
+
+    // Quando o componente for desmontado, paramos de escutar ambos
+    return () => {
+      unsubscribeGuests();
+      unsubscribeWallpaper();
+    };
   }, []);
 
-  const handleAddGuest = (newGuest: Guest) => {
-    const updated = [newGuest, ...guests];
-    setGuests(updated);
-    localStorage.setItem('made_in_brasil_guests', JSON.stringify(updated));
-    
-    const element = document.getElementById('guest-list-section');
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+  const handleAddGuest = async (newGuest: Guest): Promise<boolean> => {
+    try {
+      const normalizeName = (str: string) => 
+        str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+
+      const isDuplicate = guests.some(
+        (g) => normalizeName(g.mainName) === normalizeName(newGuest.mainName)
+      );
+
+      if (isDuplicate) {
+        return false; 
+      }
+
+      await addDoc(collection(db, 'guests'), {
+        mainName: newGuest.mainName,
+        additionalGuests: newGuest.additionalGuests,
+        totalCount: newGuest.totalCount,
+        timestamp: newGuest.timestamp
+      });
+      
+      const element = document.getElementById('guest-list-section');
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+      
+      return true; 
+      
+    } catch (error) {
+      console.error("Erro ao salvar convidado:", error);
+      alert("Ops! Houve um erro ao conectar com o servidor. Tente novamente.");
+      return false;
     }
   };
 
-  const handleRemoveGuest = (idToRemove: string) => {
-    // Atualiza a lista removendo aquele ID específico
-    setGuests((prevGuests) => prevGuests.filter((guest) => guest.id !== idToRemove));
+  const handleRemoveGuest = async (idToRemove: string) => {
+    try {
+      await deleteDoc(doc(db, 'guests', idToRemove));
+    } catch (error) {
+      console.error("Erro ao remover convidado:", error);
+    }
   };
 
-  const handleWallpaperChange = (imageUrl: string) => {
+  // NOVO: Agora salva o papel de parede na nuvem (Firestore)
+  const handleWallpaperChange = async (imageUrl: string) => {
+    // Atualiza a tela imediatamente para você ter um feedback visual
     setWallpaper(imageUrl);
-    localStorage.setItem('made_in_brasil_wallpaper', imageUrl);
+    
+    try {
+      // Salva no banco de dados na coleção "configuracoes", documento "aparencia"
+      await setDoc(doc(db, 'configuracoes', 'aparencia'), { 
+        wallpaperUrl: imageUrl 
+      }, { merge: true }); // O merge: true garante que não vai apagar outros dados se houver
+    } catch (error) {
+      console.error("Erro ao salvar papel de parede na nuvem:", error);
+      alert("Erro ao salvar a imagem. Ela pode ser muito pesada para o banco de dados (o limite é 1MB). Tente uma imagem com tamanho menor.");
+    }
   };
 
-  const removeWallpaper = () => {
+  // NOVO: Remove o papel de parede da nuvem
+  const removeWallpaper = async () => {
     setWallpaper(null);
-    localStorage.removeItem('made_in_brasil_wallpaper');
+    try {
+      await setDoc(doc(db, 'configuracoes', 'aparencia'), { 
+        wallpaperUrl: null 
+      }, { merge: true });
+    } catch (error) {
+      console.error("Erro ao remover papel de parede na nuvem:", error);
+    }
   };
 
   return (
@@ -81,10 +139,7 @@ const App: React.FC = () => {
         </div>
 
         <section id="guest-list-section" className="mt-16 sm:mt-24">
-          <GuestList 
-          guests={guests} 
-          onRemoveGuest={handleRemoveGuest} 
-        />
+          <GuestList guests={guests} onRemoveGuest={handleRemoveGuest} />
         </section>
       </main>
 
